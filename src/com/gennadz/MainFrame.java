@@ -1,8 +1,10 @@
 package com.gennadz;
 
 import java.awt.AWTException;
+import java.awt.BorderLayout;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
+import java.awt.ScrollPane;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
@@ -25,14 +27,20 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainFrame extends JFrame {
-	public static final int DEFAULT_WIDTH = 300;
-	public static final int DEFAULT_HEIGHT = 200;
+	public static final int DEFAULT_WIDTH_PANEL = 500;
+	public static final int DEFAULT_HEIGHT_PANEL = 200;
+	public static final int DEFAULT_WIDTH_TEXTAREA = 200;
+	public static final int DEFAULT_HEIGHT_TEXTAREA = 200;
+	public static final int DEFAULT_WIDTH_FRAME = 200;
+	public static final int DEFAULT_HEIGHT_FRAME = 200;
 	private SystemTray systemTray = SystemTray.getSystemTray();
 	private TrayIcon trayIcon;
 	JTextArea inputArea;
@@ -40,18 +48,28 @@ public class MainFrame extends JFrame {
 	
 	public MainFrame() throws IOException {
 		setTitle("This is header");
-		setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+		setSize(DEFAULT_WIDTH_FRAME, DEFAULT_HEIGHT_FRAME);
 		//buttons
-		JButton siteButton = new JButton("Open the site");
+		JButton siteButton = new JButton("Translate");
+		JButton clearButton = new JButton("Clear");
 		//textareas
-		inputArea = new JTextArea(5,8);
-		outputArea = new JTextArea(5,8);
-		//adding panel to frame
-		MainPanel panel = new MainPanel();
-		panel.add(siteButton);
-		panel.add(inputArea);
-		panel.add(outputArea);
-		add(panel);
+		inputArea = new JTextArea(8,20);
+		JScrollPane inputScrollPane = new JScrollPane(inputArea);
+		outputArea = new JTextArea(8,20);
+		JScrollPane outputScrollPane = new JScrollPane(outputArea);
+		//input panel
+		JPanel inputPanel = new JPanel();
+		inputPanel.add(inputArea);
+		add(inputPanel, BorderLayout.NORTH);
+		
+		//output panel
+		JPanel outputPanel = new JPanel();
+		outputPanel.add(outputArea);
+		add(outputPanel, BorderLayout.CENTER);
+		JPanel buttonsPanel = new JPanel();
+		buttonsPanel.add(siteButton);
+		buttonsPanel.add(clearButton);
+		add(buttonsPanel, BorderLayout.SOUTH);
 		//creating action to button
 		TranslateAction openSiteAction = new TranslateAction();
 		siteButton.addActionListener(openSiteAction);
@@ -127,7 +145,6 @@ public class MainFrame extends JFrame {
 				} else {
 					langPair = "ru|en";
 					langPair = URLEncoder.encode(langPair);
-					//%7C
 				}
 				String urlPath = "https://ajax.googleapis.com/ajax/services/language/translate?" +
 				"v=1.0&q="+textToTranslate+"&langpair="+langPair+"&key="+key+"&userip="+ip;
@@ -143,10 +160,8 @@ public class MainFrame extends JFrame {
 					System.out.println(line);
 				}
 				JSONObject json = new JSONObject(builder.toString());
-				//String[] s = JSONObject.getNames(json);
 				JSONObject responseData = (JSONObject) json.get("responseData");
 				String translatedText = responseData.getString("translatedText");
-				
 				outputArea.setText(translatedText);
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
