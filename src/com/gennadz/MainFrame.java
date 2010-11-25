@@ -27,12 +27,20 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.awt.Dimension;
+import javax.swing.JCheckBox;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JMenu;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class MainFrame extends JFrame {
 	public static final int DEFAULT_WIDTH_PANEL = 500;
@@ -48,31 +56,58 @@ public class MainFrame extends JFrame {
 	
 	public MainFrame() throws IOException {
 		setTitle("This is header");
-		setSize(DEFAULT_WIDTH_FRAME, DEFAULT_HEIGHT_FRAME);
-		//buttons
-		JButton siteButton = new JButton("Translate");
-		JButton clearButton = new JButton("Clear");
+		setSize(416, 374);
+		
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		
+		JMenu menu_2 = new JMenu("Файл");
+		menuBar.add(menu_2);
+		
+		JMenu menu_3 = new JMenu("Выход");
+		menu_2.add(menu_3);
+		
+		JMenu menu = new JMenu("Помощь");
+		menuBar.add(menu);
+		
+		JMenu menu_1 = new JMenu("О программе");
+		menu.add(menu_1);
+		getContentPane().setLayout(null);
+		
+		JTextArea textArea = new JTextArea();
+		textArea.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent arg0) {
+				
+			}
+		});
+		textArea.setBounds(70, 55, 237, 63);
+		getContentPane().add(textArea);
+		
+		JLabel label = new JLabel("Текст");
+		label.setBounds(165, 30, 46, 14);
+		getContentPane().add(label);
+		
+		JTextArea textArea_1 = new JTextArea();
+		textArea_1.setBounds(70, 187, 237, 63);
+		getContentPane().add(textArea_1);
+		
+		JLabel label_1 = new JLabel("Перевод");
+		label_1.setBounds(165, 162, 46, 14);
+		getContentPane().add(label_1);
+		
+		JButton button = new JButton("Перевести");
+		button.setBounds(70, 273, 89, 23);
+		getContentPane().add(button);
+		
+		JButton button_1 = new JButton("Очистить");
+		button_1.setBounds(218, 273, 89, 23);
+		getContentPane().add(button_1);
 		//textareas
 		inputArea = new JTextArea(8,20);
 		JScrollPane inputScrollPane = new JScrollPane(inputArea);
 		outputArea = new JTextArea(8,20);
 		JScrollPane outputScrollPane = new JScrollPane(outputArea);
-		//input panel
-		JPanel inputPanel = new JPanel();
-		inputPanel.add(inputArea);
-		add(inputPanel, BorderLayout.NORTH);
-		
-		//output panel
-		JPanel outputPanel = new JPanel();
-		outputPanel.add(outputArea);
-		add(outputPanel, BorderLayout.CENTER);
-		JPanel buttonsPanel = new JPanel();
-		buttonsPanel.add(siteButton);
-		buttonsPanel.add(clearButton);
-		add(buttonsPanel, BorderLayout.SOUTH);
-		//creating action to button
-		TranslateAction openSiteAction = new TranslateAction();
-		siteButton.addActionListener(openSiteAction);
 		//tray icon
 		trayIcon = new TrayIcon(ImageIO.read(new File("trayicon.gif")), "Tray test");
 		trayIcon.addActionListener(new ActionListener() {
@@ -108,6 +143,8 @@ public class MainFrame extends JFrame {
 	private void removeTrayIcon() {
 		systemTray.remove(trayIcon);
 	}
+	
+	
 	private void addTrayIcon() {
 		try {
 			systemTray.add(trayIcon);
@@ -116,62 +153,5 @@ public class MainFrame extends JFrame {
 	    catch(AWTException ex) {
 	      ex.printStackTrace();
 	    }
-	}
-	
-	class TranslateAction implements ActionListener {
-		
-		Logger logger = Logger.getLogger("TranslateAction");
-		
-		@Override
-		public void actionPerformed(ActionEvent actionEvent) {
-			URL url;
-			try {
-				String key = "ABQIAAAAs-s2Ae6qDIM0-Yz2G-gMxRSNnevTn-a6jTi9i5iCCE6iZiia3RRPhRaw3OofMoJY_16OF5wYTGOEQA";
-				InetAddress ownIP=InetAddress.getLocalHost();
-				String ip = ownIP.getHostAddress();
-				String textToTranslate = inputArea.getText();
-				//detect latin
-				Pattern pattern = Pattern.compile("[A-Z][a-z]");
-				Matcher matcher = pattern.matcher(textToTranslate);
-				boolean isLatin = matcher.find();
-				logger.info("isLatin:"+isLatin);
-				//encode
-				textToTranslate = URLEncoder.encode(textToTranslate);
-				
-				String langPair;
-				if (isLatin) {
-					langPair = "en|ru";
-					langPair = URLEncoder.encode(langPair);
-				} else {
-					langPair = "ru|en";
-					langPair = URLEncoder.encode(langPair);
-				}
-				String urlPath = "https://ajax.googleapis.com/ajax/services/language/translate?" +
-				"v=1.0&q="+textToTranslate+"&langpair="+langPair+"&key="+key+"&userip="+ip;
-				logger.info("urlPath: "+urlPath);
-				url = new URL(urlPath);
-				URLConnection connection = url.openConnection();
-				connection.addRequestProperty("Referer", "http://gennadz.blogspot.com");
-				String line;
-				StringBuilder builder = new StringBuilder();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-				while((line = reader.readLine()) != null) {
-					builder.append(line);
-					System.out.println(line);
-				}
-				JSONObject json = new JSONObject(builder.toString());
-				JSONObject responseData = (JSONObject) json.get("responseData");
-				String translatedText = responseData.getString("translatedText");
-				outputArea.setText(translatedText);
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-					
-		}
 	}
 }
